@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_migrate import Migrate
 from flask_cors import CORS
 
@@ -13,10 +13,17 @@ CORS(app)
 db.init_app(app)
 migrate = Migrate(app, db)
 
-@app.route('/')
+# Route for frontend
+@app.route("/")
 def index():
+    return render_template("index.html")
+
+# Optional: simple API welcome message
+@app.route("/api")
+def welcome():
     return {"message": "Welcome to the Late Show API"}
 
+# Get all episodes
 @app.route('/episodes', methods=['GET'])
 def get_episodes():
     episodes = Episode.query.all()
@@ -26,6 +33,7 @@ def get_episodes():
         "number": e.number
     } for e in episodes]), 200
 
+# Get single episode with appearances
 @app.route('/episodes/<int:id>', methods=['GET'])
 def get_episode(id):
     episode = Episode.query.get(id)
@@ -37,6 +45,7 @@ def get_episode(id):
         "date": episode.date,
         "number": episode.number,
         "appearances": [{
+
             "id": ap.id,
             "rating": ap.rating,
             "guest_id": ap.guest_id,
@@ -49,6 +58,7 @@ def get_episode(id):
         } for ap in episode.appearances]
     }), 200
 
+# Get all guests
 @app.route('/guests', methods=['GET'])
 def get_guests():
     guests = Guest.query.all()
@@ -58,6 +68,7 @@ def get_guests():
         "occupation": g.occupation
     } for g in guests]), 200
 
+# Create an appearance
 @app.route('/appearances', methods=['POST'])
 def post_appearance():
     data = request.get_json()
@@ -93,6 +104,7 @@ def post_appearance():
     except Exception as e:
         return jsonify({"errors": [str(e)]}), 400
 
+# Delete an episode
 @app.route('/episodes/<int:id>', methods=['DELETE'])
 def delete_episode(id):
     episode = Episode.query.get(id)
